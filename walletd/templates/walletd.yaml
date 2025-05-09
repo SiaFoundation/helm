@@ -1,0 +1,85 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-config
+  namespace: {{ .Release.Namespace }}
+data:
+  explored.yml: |-
+    consensus:
+      network: {{ .Values.network | default "mainnet" }}
+    log:
+      level: {{ .Values.logLevel | default "info" }}
+      file:
+        enabled: false
+
+---
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}
+    spec:
+      terminationGracePeriodSeconds: 10
+      restartPolicy: Always
+      {{- if .Values.image.pullSecrets }}
+      imagePullSecrets:
+        {{- toYaml .Values.image.pullSecrets | nindent 8 }}
+      {{- end }}
+      containers:
+      - name: {{ .Release.Name }}
+        image: ghcr.io/siafoundation/walletd:{{ .Values.image.tag | default "latest" }}
+        imagePullPolicy: {{ .Values.image.pullPolicy | default "Always" }}
+        ports:
+        - containerPort: 9980
+        env:
+          - name: WALLETD_CONFIG_FILE
+            value: /etc/walletd/walletd.yml
+        volumeMounts:
+        - name: {{ .Release.Name }}-config
+          mountPath: /etc/walletd # we could use subpath, but it would not be updated on change
+        - name: {{ .Release.Name }}-data
+          mountPath: /data
+        {{- if .Values.resources }}
+        resources:
+          {{- toYaml .Values.resources | nindent 10 }}
+        {{- end }}
+      volumes:
+      - name: {{ .Release.Name }}-config
+        configMap:
+          name: {{ .Release.Name }}-config
+  serviceName: {{ .Release.Name }}
+  volumeClaimTemplates:
+  - metadata:
+      name: {{ .Release.Name }}-data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      {{- if .Values.volumeClaims.resources }}
+      resources:
+        {{- toYaml .Values.volumeClaims.resources | nindent 8 }}
+      {{- end }}
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  type: LoadBalancer
+  ports:
+    - name: api
+      port: 9980
+      targetPort: 9980
+  selector:
+    app: {{ .Release.Name }}
