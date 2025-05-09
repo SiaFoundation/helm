@@ -5,7 +5,8 @@ metadata:
   namespace: {{ .Release.Namespace }}
 data:
   explored.yml: |-
-    network: {{ .Values.network | default "mainnet" }}
+    consensus:
+      network: {{ .Values.network | default "mainnet" }}
     log:
       level: {{ .Values.logLevel | default "info" }}
       file:
@@ -30,14 +31,14 @@ spec:
     spec:
       terminationGracePeriodSeconds: 10
       restartPolicy: Always
+      {{- if .Values.image.pullSecrets }}
+      imagePullSecrets:
+        {{- toYaml .Values.image.pullSecrets | nindent 8 }}
+      {{- end }}
       containers:
       - name: {{ .Release.Name }}
         image: ghcr.io/siafoundation/explored:{{ .Values.image.tag | default "latest" }}
         imagePullPolicy: {{ .Values.image.pullPolicy | default "Always" }}
-        {{- if .Values.image.pullSecrets }}
-        imagePullSecrets:
-          {{- toYaml .Values.image.pullSecrets | nindent 8 }}
-        {{- end }}
         ports:
         - containerPort: 9980
         env:
