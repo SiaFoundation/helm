@@ -31,7 +31,7 @@ spec:
       terminationGracePeriodSeconds: 10
       restartPolicy: Always
       containers:
-      - name: explored
+      - name: {{ .Release.Name }}-explored
         image: ghcr.io/siafoundation/explored:{{ .Values.image.tag | default "latest" }}
         imagePullPolicy: {{ .Values.image.pullPolicy | default "Always" }}
         ports:
