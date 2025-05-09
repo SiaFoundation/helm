@@ -4,13 +4,7 @@ metadata:
   name: {{ .Release.Name }}-config
   namespace: {{ .Release.Namespace }}
 data:
-  explored.yml: |-
-    consensus:
-      network: {{ .Values.network | default "mainnet" }}
-    log:
-      level: {{ .Values.logLevel | default "info" }}
-      file:
-        enabled: false
+  explored.yml: |- {{ .Values.config | nindent 4 }}
 
 ---
 
@@ -32,8 +26,7 @@ spec:
       terminationGracePeriodSeconds: 10
       restartPolicy: Always
       {{- if .Values.image.pullSecrets }}
-      imagePullSecrets:
-        {{- toYaml .Values.image.pullSecrets | nindent 8 }}
+      imagePullSecrets: {{- toYaml .Values.image.pullSecrets | nindent 8 }}
       {{- end }}
       containers:
       - name: {{ .Release.Name }}
