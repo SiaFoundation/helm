@@ -34,6 +34,10 @@ spec:
       - name: {{ .Release.Name }}-explored
         image: ghcr.io/siafoundation/explored:{{ .Values.image.tag | default "latest" }}
         imagePullPolicy: {{ .Values.image.pullPolicy | default "Always" }}
+        {{- if .Values.image.pullSecrets }}
+        imagePullSecrets:
+          {{- toYaml .Values.image.pullSecrets | nindent 8 }}
+        {{- end }}
         ports:
         - containerPort: 9980
         env:
@@ -44,8 +48,10 @@ spec:
           mountPath: /etc/explored # we could use subpath, but it would not be updated on change
         - name: {{ .Release.Name }}-explored-data
           mountPath: /data
+        {{- if .Values.resources }}
         resources:
           {{- toYaml .Values.resources | nindent 10 }}
+        {{- end }}
       volumes:
       - name: {{ .Release.Name }}-explored-config
         configMap:
@@ -56,8 +62,10 @@ spec:
       name: {{ .Release.Name }}-explored-data
     spec:
       accessModes: [ "ReadWriteOnce" ]
+      {{- if .Values.volumeClaims.resources }}
       resources:
-        {{- toYaml .Values.volumeResources | nindent 8 }}
+        {{- toYaml .Values.volumeClaims.resources | nindent 8 }}
+      {{- end }}
 
 ---
 

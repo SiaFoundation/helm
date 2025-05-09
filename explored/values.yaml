@@ -7,15 +7,9 @@ image:
   pullPolicy: Always
   # Overrides the image tag whose default is the chart appVersion.
   tag: "master"
+  pullSecrets: {}
 
-resources:
-  limits:
-    cpu: 2000m
-    memory: 4Gi
-  requests:
-    cpu: 1000m
-    memory: 2Gi
+resources: {}
 
-volumeResources:
-  requests:
-    storage: 200Gi
+volumeClaims:
+  resources: {}
