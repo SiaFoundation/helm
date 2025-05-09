@@ -4,13 +4,7 @@ metadata:
   name: {{ .Release.Name }}-config
   namespace: {{ .Release.Namespace }}
 data:
-  explored.yml: |-
-    consensus:
-      network: {{ .Values.network | default "mainnet" }}
-    log:
-      level: {{ .Values.logLevel | default "info" }}
-      file:
-        enabled: false
+  walletd.yml: |- {{ .Values.config | nindent 4 }}
 
 ---
 
