@@ -16,24 +16,6 @@ image:
   tag: "master"
   pullSecrets: []
 
-startupProbe:
-  httpGet:
-    path: /api/health
-    port: api-port
-  initialDelaySeconds: 5
-  periodSeconds: 5
-  timeoutSeconds: 30
-  failureThreshold: 10
-
-livenessProbe:
-  httpGet:
-    path: /api/health
-    port: api-port
-  initialDelaySeconds: 30
-  periodSeconds: 15
-  timeoutSeconds: 30
-  failureThreshold: 3
-
 resources: {}
 
 volumeClaims:
