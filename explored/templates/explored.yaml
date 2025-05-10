@@ -8,6 +8,17 @@ data:
 
 ---
 
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ .Release.Name }}-api-password
+  namespace: {{ .Release.Namespace }}
+type: Opaque
+data:
+  password: {{ randAlphaNum 16 | quote }} # Generates a random password
+
+--- 
+
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -35,6 +46,11 @@ spec:
         ports:
         - containerPort: 9980
         env:
+          - name: EXPLORED_API_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Release.Name }}-api-password
+                key: password
           - name: EXPLORED_CONFIG_FILE
             value: /etc/explored/explored.yml
         volumeMounts:
