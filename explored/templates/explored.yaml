@@ -16,7 +16,7 @@ metadata:
   namespace: {{ .Release.Namespace }}
 type: Opaque
 data:
-  password: {{ .Values.apiPassword | default (randAlphaNum 16 | quote) }}
+  password: {{ .Values.apiPassword | default (randAlphaNum 16) | b64enc }}
 
 --- 
 
