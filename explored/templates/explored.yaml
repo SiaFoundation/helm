@@ -46,7 +46,8 @@ spec:
         image: ghcr.io/siafoundation/explored:{{ .Values.image.tag | default "latest" }}
         imagePullPolicy: {{ .Values.image.pullPolicy | default "Always" }}
         ports:
-        - containerPort: 9980
+          - name: api-port
+            containerPort: 9980
         env:
           - name: EXPLORED_API_PASSWORD
             valueFrom:
@@ -55,19 +56,23 @@ spec:
                 key: password
           - name: EXPLORED_CONFIG_FILE
             value: /etc/explored/explored.yml
+        {{ if .Values.livenessProbe }}
+        livenessProbe: 
+          {{- toYaml .Values.livenessProbe | nindent 10 }}
+        {{ end }}
         volumeMounts:
-        - name: {{ .Release.Name }}-config
-          mountPath: /etc/explored # we could use subpath, but it would not be updated on change
-        - name: {{ .Release.Name }}-data
-          mountPath: /data
-        {{- if .Values.resources }}
+          - name: {{ .Release.Name }}-config
+            mountPath: /etc/explored # we could use subpath, but it would not be updated on change
+          - name: {{ .Release.Name }}-data
+            mountPath: /data
+        {{ if .Values.resources }}
         resources:
           {{- toYaml .Values.resources | nindent 10 }}
-        {{- end }}
+        {{ end }}
       volumes:
-      - name: {{ .Release.Name }}-config
-        configMap:
-          name: {{ .Release.Name }}-config
+        - name: {{ .Release.Name }}-config
+          configMap:
+            name: {{ .Release.Name }}-config
   serviceName: {{ .Release.Name }}
   volumeClaimTemplates:
   - metadata:

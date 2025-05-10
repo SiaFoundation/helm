@@ -16,6 +16,15 @@ image:
   tag: "master"
   pullSecrets: []
 
+livenessProbe:
+  httpGet:
+    path: /api/health
+    port: api-port
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 30 # can be slow when syncing
+  failureThreshold: 3
+
 resources: {}
 
 volumeClaims:
