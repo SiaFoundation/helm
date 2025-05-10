@@ -60,6 +60,10 @@ spec:
         livenessProbe: 
           {{- toYaml .Values.livenessProbe | nindent 10 }}
         {{ end }}
+        {{ if .Values.startupProbe }}
+        startupProbe: 
+          {{- toYaml .Values.startupProbe | nindent 10 }}
+        {{ end }}
         volumeMounts:
           - name: {{ .Release.Name }}-config
             mountPath: /etc/explored # we could use subpath, but it would not be updated on change
