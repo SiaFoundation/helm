@@ -4,7 +4,8 @@ metadata:
   name: {{ .Release.Name }}-config
   namespace: {{ .Release.Namespace }}
 data:
-  walletd.yml: |- {{ .Values.config | nindent 4 }}
+  walletd.yml: |- 
+{{ .Values.config | indent 4 }}
 
 ---
 
@@ -15,7 +16,7 @@ metadata:
   namespace: {{ .Release.Namespace }}
 type: Opaque
 data:
-  password: {{ randAlphaNum 16 | quote }} # Generates a random password
+  password: {{ .Values.apiPassword | default (randAlphaNum 16 | quote) }}
 
 ---
 
@@ -37,8 +38,8 @@ spec:
       terminationGracePeriodSeconds: 10
       restartPolicy: Always
       {{- if .Values.image.pullSecrets }}
-      imagePullSecrets:
-        {{- toYaml .Values.image.pullSecrets | nindent 8 }}
+      imagePullSecrets: 
+        {{ toYaml .Values.image.pullSecrets | indent 8 }}
       {{- end }}
       containers:
       - name: {{ .Release.Name }}
@@ -48,10 +49,10 @@ spec:
         - containerPort: 9980
         env:
           - name: WALLETD_API_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: {{ .Release.Name }}-api-password
-              key: password
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Release.Name }}-api-password
+                key: password
           - name: WALLETD_CONFIG_FILE
             value: /etc/walletd/walletd.yml
         volumeMounts:
