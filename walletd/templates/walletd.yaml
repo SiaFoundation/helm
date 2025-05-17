@@ -26,7 +26,7 @@ metadata:
   name: {{ .Release.Name }}
   namespace: {{ .Release.Namespace }}
 spec:
-  replicas: 1
+  replicas: {{ .Values.replicas | default 1 }}
   selector:
     matchLabels:
       app: {{ .Release.Name }}
@@ -41,33 +41,61 @@ spec:
       imagePullSecrets: 
         {{ toYaml .Values.image.pullSecrets | indent 8 }}
       {{- end }}
+      {{- if .Values.topologySpreadConstraints }}
+      topologySpreadConstraints:
+        {{ toYaml .Values.topologySpreadConstraints | nindent 8 }}
+      {{- else }}
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: topology.kubernetes.io/zone
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector: 
+            matchLabels:
+              app: {{ .Release.Name }}
+      {{- end }}
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                  - key: app
+                    operator: In
+                    values:
+                      - {{ .Release.Name }}
+              topologyKey: topology.kubernetes.io/zone
       containers:
-      - name: {{ .Release.Name }}
-        image: ghcr.io/siafoundation/walletd:{{ .Values.image.tag | default "latest" }}
-        imagePullPolicy: {{ .Values.image.pullPolicy | default "Always" }}
-        ports:
-        - containerPort: 9980
-        env:
-          - name: WALLETD_API_PASSWORD
-            valueFrom:
-              secretKeyRef:
-                name: {{ .Release.Name }}-api-password
-                key: password
-          - name: WALLETD_CONFIG_FILE
-            value: /etc/walletd/walletd.yml
-        volumeMounts:
-        - name: {{ .Release.Name }}-config
-          mountPath: /etc/walletd # we could use subpath, but it would not be updated on change
-        - name: {{ .Release.Name }}-data
-          mountPath: /data
-        {{- if .Values.resources }}
-        resources:
-          {{- toYaml .Values.resources | nindent 10 }}
-        {{- end }}
+        - name: {{ .Release.Name }}
+          image: ghcr.io/siafoundation/walletd:{{ .Values.image.tag | default "latest" }}
+          imagePullPolicy: {{ .Values.image.pullPolicy | default "Always" }}
+          ports:
+          - containerPort: 9980
+          env:
+            - name: WALLETD_API_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-api-password
+                  key: password
+            - name: WALLETD_CONFIG_FILE
+              value: /etc/walletd/walletd.yml
+          volumeMounts:
+          - name: {{ .Release.Name }}-config
+            mountPath: /etc/walletd # we could use subpath, but it would not be updated on change
+          - name: {{ .Release.Name }}-data
+            mountPath: /data
+          {{- if .Values.resources }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          {{- end }}
+          {{ if .Values.readinessProbe }}
+          readinessProbe: 
+            {{ toYaml .Values.readinessProbe | nindent 12 }}
+          {{ end }}
       volumes:
-      - name: {{ .Release.Name }}-config
-        configMap:
-          name: {{ .Release.Name }}-config
+        - name: {{ .Release.Name }}-config
+          configMap:
+            name: {{ .Release.Name }}-config
   serviceName: {{ .Release.Name }}
   volumeClaimTemplates:
   - metadata:

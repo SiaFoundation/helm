@@ -26,7 +26,7 @@ metadata:
   name: {{ .Release.Name }}
   namespace: {{ .Release.Namespace }}
 spec:
-  replicas: 1
+  replicas: {{ .Values.replicas | default 1 }}
   selector:
     matchLabels:
       app: {{ .Release.Name }}
@@ -41,6 +41,30 @@ spec:
       imagePullSecrets: 
         {{ toYaml .Values.image.pullSecrets | indent 8 }}
       {{- end }}
+      {{- if .Values.topologySpreadConstraints }}
+      topologySpreadConstraints:
+        {{ toYaml .Values.topologySpreadConstraints | nindent 8 }}
+      {{- else }}
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: topology.kubernetes.io/zone
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector: 
+            matchLabels:
+              app: {{ .Release.Name }}
+      {{- end }}
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                  - key: app
+                    operator: In
+                    values:
+                      - {{ .Release.Name }}
+              topologyKey: topology.kubernetes.io/zone
       containers:
       - name: {{ .Release.Name }}
         image: ghcr.io/siafoundation/explored:{{ .Values.image.tag | default "latest" }}
@@ -56,13 +80,9 @@ spec:
                 key: password
           - name: EXPLORED_CONFIG_FILE
             value: /etc/explored/explored.yml
-        {{ if .Values.livenessProbe }}
-        livenessProbe: 
-          {{- toYaml .Values.livenessProbe | nindent 10 }}
-        {{ end }}
-        {{ if .Values.startupProbe }}
-        startupProbe: 
-          {{- toYaml .Values.startupProbe | nindent 10 }}
+        {{ if .Values.readinessProbe }}
+        readinessProbe: 
+          {{- toYaml .Values.readinessProbe | nindent 10 }}
         {{ end }}
         volumeMounts:
           - name: {{ .Release.Name }}-config

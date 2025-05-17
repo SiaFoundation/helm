@@ -1,6 +1,8 @@
 config: |-
   consensus:
     network: mainnet
+  index:
+    batchSize: 10
   log:
     level: info
     file:
@@ -16,7 +18,14 @@ image:
   tag: "master"
   pullSecrets: []
 
-resources: {}
+readinessProbe:
+  httpGet:
+    path: /api/health
+    port: 9980
+  initialDelaySeconds: 10
+  periodSeconds: 60
+  timeoutSeconds: 60
+  failureThreshold: 5
 
 volumeClaims:
   resources: {}
