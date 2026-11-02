@@ -1,0 +1,37 @@
+name: Publish
+
+on:
+  push:
+    branches:
+      - main
+
+permissions: {}
+
+jobs:
+  publish:
+    name: Publish charts
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Log in to ghcr
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_OWNER: ${{ github.repository_owner }}
+        run: helm registry login ghcr.io --username "$GH_OWNER" --password-stdin <<< "$GH_TOKEN"
+      # a chart is pushed once per version, so a push that does not bump a
+      # chart's version publishes nothing for it
+      - name: Push charts whose version is not published yet
+        run: |
+          for chart in */Chart.yaml; do
+            dir=$(dirname "$chart")
+            version=$(sed -n 's/^version: *//p' "$chart" | tr -d '"')
+            if helm show chart "oci://ghcr.io/siafoundation/charts/$dir" --version "$version" > /dev/null 2>&1; then
+              echo "$dir $version is already published"
+              continue
+            fi
+            helm package "$dir"
+            helm push "$dir-$version.tgz" oci://ghcr.io/siafoundation/charts
+          done

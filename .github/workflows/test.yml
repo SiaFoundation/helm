@@ -1,0 +1,27 @@
+name: Lint
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Lint and render every chart
+        run: |
+          for chart in */Chart.yaml; do
+            dir=$(dirname "$chart")
+            values=()
+            if [ -f "$dir/ci/lint-values.yaml" ]; then
+              values=(--values "$dir/ci/lint-values.yaml")
+            fi
+            helm lint --strict "$dir" "${values[@]}"
+            helm template "$dir" "$dir" "${values[@]}" > /dev/null
+          done
