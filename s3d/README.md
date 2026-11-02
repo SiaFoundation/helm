@@ -21,9 +21,12 @@ history until it is pruned or the release is uninstalled. The key is minted on
 the indexer, expires and is good for a limited number of uses.
 
 The data volume holds the metadata database and the objects waiting to be
-uploaded to Sia. It is not deleted by `helm uninstall`, a reinstall with the
-same release name picks it up again, and `persistence.size` should cover
-`sia.diskUsageLimit` in the config, 10 GiB by default.
+uploaded to Sia. It is not deleted by `helm uninstall` and a reinstall with
+the same release name picks it up again. The upload buffer is capped by
+`sia.diskUsageLimit`, 10 GiB by default, but the cap is checked before a
+request is admitted, so requests in flight push the buffer past it and the
+database needs room next to it. Keep `persistence.size` well above the cap,
+the default leaves 10 GiB.
 
 Run a single instance per app key. The chart pins the replica count to one for
 that reason, see the project README.

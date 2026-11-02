@@ -5,6 +5,12 @@ on:
     branches:
       - main
 
+# runs queue behind each other, so two pushes can never both see a version as
+# unpublished and push it twice
+concurrency:
+  group: publish
+  cancel-in-progress: false
+
 permissions: {}
 
 jobs:
@@ -28,9 +34,12 @@ jobs:
           for chart in */Chart.yaml; do
             dir=$(dirname "$chart")
             version=$(sed -n 's/^version: *//p' "$chart" | tr -d '"')
-            if helm show chart "oci://ghcr.io/siafoundation/charts/$dir" --version "$version" > /dev/null 2>&1; then
+            if lookup=$(helm show chart "oci://ghcr.io/siafoundation/charts/$dir" --version "$version" 2>&1 > /dev/null); then
               echo "$dir $version is already published"
               continue
+            elif ! grep -q 'not found' <<< "$lookup"; then
+              echo "$lookup" >&2
+              exit 1
             fi
             helm package "$dir"
             helm push "$dir-$version.tgz" oci://ghcr.io/siafoundation/charts

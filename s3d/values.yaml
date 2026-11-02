@@ -23,10 +23,12 @@ preauthorizedKey: ""
 config: {}
 
 # persistence sizes the data volume, which holds the metadata database and
-# the objects waiting to be uploaded. An empty storageClass uses the cluster
-# default.
+# the upload buffer. The buffer is capped by sia.diskUsageLimit, 10 GiB by
+# default, but the cap is checked before a request is admitted, so requests
+# in flight push the buffer past it. Keep the size well above the cap. An
+# empty storageClass uses the cluster default.
 persistence:
-  size: 10Gi
+  size: 20Gi
   storageClass: ""
 
 # resources are passed to the container.
