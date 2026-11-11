@@ -8,7 +8,7 @@ image:
 # required, protects the admin API
 adminPassword: ""
 
-# the phrase and the key are only read on the first start
+# all three are only read on the first start, later starts use the stored key
 indexerURL: https://sia.storage
 recoveryPhrase: ""
 preauthorizedKey: ""
@@ -27,7 +27,9 @@ resources: {}
 ingress:
   enabled: false
   className: ""
-  annotations: {}
+  # nginx caps request bodies at 1m without this
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: "0"
   hosts:
     - s3.example.com
   tls: []
