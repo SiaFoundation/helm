@@ -1,41 +1,29 @@
-# image.repository and image.tag select the s3d image, the tag defaults to the
-# chart appVersion. image.pullSecrets lists the pull secrets of a private
-# registry by name.
 image:
   repository: ghcr.io/siafoundation/s3d
+  # defaults to the chart appVersion
   tag: ""
   pullPolicy: IfNotPresent
   pullSecrets: []
 
-# adminPassword protects the admin API and is required.
+# required, protects the admin API
 adminPassword: ""
 
-# indexerURL, recoveryPhrase and preauthorizedKey register the instance on its
-# first start. The phrase and the key are only read while the data volume
-# holds no app key yet.
+# the phrase and the key are only read on the first start
 indexerURL: https://sia.storage
 recoveryPhrase: ""
 preauthorizedKey: ""
 
-# config holds additional s3d.yml settings, for example sia.dataShards or
-# s3.hostBases. The addresses, the data directory and the admin password are
-# set by the chart.
+# extra s3d.yml settings, the chart sets the addresses, directory and password
 config: {}
 
-# persistence sizes the data volume, which holds the metadata database and
-# the upload buffer. The buffer is capped by sia.diskUsageLimit, 10 GiB by
-# default, but the cap is checked before a request is admitted, so requests
-# in flight push the buffer past it. Keep the size well above the cap. An
-# empty storageClass uses the cluster default.
+# database and upload buffer, keep the size well above sia.diskUsageLimit
 persistence:
   size: 20Gi
   storageClass: ""
 
-# resources are passed to the container.
 resources: {}
 
-# ingress exposes the S3 API. Add the wildcard host for virtual-hosted-style
-# buckets together with config.s3.hostBases.
+# exposes the S3 API, list the wildcard host too when config.s3.hostBases is set
 ingress:
   enabled: false
   className: ""
@@ -44,11 +32,9 @@ ingress:
     - s3.example.com
   tls: []
 
-# nodeSelector, tolerations and affinity are passed to the pod.
 nodeSelector: {}
 tolerations: []
 affinity: {}
 
-# nameOverride and fullnameOverride replace the chart name in resource names.
 nameOverride: ""
 fullnameOverride: ""

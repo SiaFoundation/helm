@@ -5,7 +5,7 @@ metadata:
   labels:
     {{- include "s3d.labels" . | nindent 4 }}
 spec:
-  # One instance per app key and data directory, see the README.
+  # One instance per app key and data directory.
   replicas: 1
   serviceName: {{ include "s3d.fullname" . }}
   selector:

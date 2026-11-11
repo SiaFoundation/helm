@@ -1,6 +1,4 @@
-# s3d Helm chart
-
-Runs one `s3d` instance as a StatefulSet with a persistent data volume.
+# s3d
 
 ```sh
 helm install s3d oci://ghcr.io/siafoundation/charts/s3d \
@@ -9,38 +7,12 @@ helm install s3d oci://ghcr.io/siafoundation/charts/s3d \
   --set preauthorizedKey=<hex>
 ```
 
-The image tag defaults to the `appVersion` in `Chart.yaml`, the s3d release
-the chart was written against. Every value is documented in `values.yaml`.
+The recovery phrase and the pre-authorized key register the instance on its
+first start and can be removed from the values afterwards.
 
-On the first start the pod registers with the indexer using the pre-authorized
-key and the recovery phrase, then stores the app key on the data volume. Later
-starts use the stored key and no longer read the phrase or the pre-authorized
-key, so both can be removed from the values once the pod has come up. Helm
-keeps earlier revisions around, so they stay readable through the release
-history until it is pruned or the release is uninstalled. The key is minted on
-the indexer, expires and is good for a limited number of uses.
-
-The data volume holds the metadata database and the objects waiting to be
-uploaded to Sia. It is not deleted by `helm uninstall` and a reinstall with
-the same release name picks it up again. The upload buffer is capped by
-`sia.diskUsageLimit`, 10 GiB by default, but the cap is checked before a
-request is admitted, so requests in flight push the buffer past it and the
-database needs room next to it. Keep `persistence.size` well above the cap,
-the default leaves 10 GiB.
-
-Run a single instance per app key. The chart pins the replica count to one for
-that reason, see the project README.
-
-The admin API listens on port 8001 of the service, behind the password and
-without TLS, so leave it inside the cluster. The S3 API is on port 8000 and is
-the only port the Ingress exposes. Add the wildcard host to `ingress.hosts`
-together with `config.s3.hostBases` for virtual-hosted-style buckets.
-
-## Users and access keys
+Create a user and an access key once the pod is ready:
 
 ```sh
 kubectl exec s3d-0 -- s3d users create <username>
 kubectl exec s3d-0 -- s3d keys create <username>
 ```
-
-The secret key is only shown once.
