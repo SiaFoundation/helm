@@ -1,5 +1,8 @@
 # s3d
 
+Chart for [s3d](https://github.com/SiaFoundation/s3d). The `config` value is
+written to `s3d.yml`, see s3d README for details.
+
 ```sh
 helm install s3d oci://ghcr.io/siafoundation/charts/s3d \
   --set adminPassword=<password> \
@@ -16,3 +19,10 @@ Create a user and an access key once the pod is ready:
 kubectl exec s3d-0 -- s3d users create <username>
 kubectl exec s3d-0 -- s3d keys create <username>
 ```
+
+Clients that address buckets as `<bucket>.s3.example.com` need
+`config.s3.hostBases` set to the domain and a wildcard host on the ingress.
+
+Bucket policy conditions on `aws:SourceIp` and `aws:SecureTransport` need
+`config.s3.trustedProxies` set to the CIDR the ingress controller dials from,
+otherwise every request looks like plain HTTP from the controller.
