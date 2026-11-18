@@ -1,0 +1,42 @@
+image:
+  repository: ghcr.io/siafoundation/s3d
+  # defaults to the chart appVersion
+  tag: ""
+  pullPolicy: IfNotPresent
+  pullSecrets: []
+
+# required, protects the admin API
+adminPassword: ""
+
+# all three are only read on the first start, later starts use the stored key
+indexerURL: https://sia.storage
+recoveryPhrase: ""
+preauthorizedKey: ""
+
+# extra s3d.yml settings, the chart sets the addresses, directory and password
+config: {}
+
+# database and upload buffer, keep the size well above sia.diskUsageLimit
+persistence:
+  size: 20Gi
+  storageClass: ""
+
+resources: {}
+
+# exposes the S3 API, list the wildcard host too when config.s3.hostBases is set
+ingress:
+  enabled: false
+  className: ""
+  # nginx caps request bodies at 1m without this
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: "0"
+  hosts:
+    - s3.example.com
+  tls: []
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+nameOverride: ""
+fullnameOverride: ""
